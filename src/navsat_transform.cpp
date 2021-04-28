@@ -311,7 +311,7 @@ namespace RobotLocalization
 
       ROS_INFO_STREAM("Transform world frame pose is: " << transform_world_pose_);
       ROS_INFO_STREAM("World frame->cartesian transform is " << cartesian_world_transform_);
-
+      
       transform_good_ = true;
 
       // Send out the (static) Cartesian transform in case anyone else would like to use it.
@@ -441,6 +441,7 @@ namespace RobotLocalization
     // Set header information stamp because we would like to know the robot's position at that timestamp
     gps_odom.header.frame_id = world_frame_id_;
     gps_odom.header.stamp = gps_update_time_;
+    gps_odom.child_frame_id = base_link_frame_id_;
 
     // Now fill out the message. Set the orientation to the identity.
     tf2::toMsg(transformed_cartesian_gps, gps_odom.pose.pose);
@@ -833,7 +834,9 @@ namespace RobotLocalization
     {
       NavsatConversions::LLtoUTM(msg->latitude, msg->longitude, cartesian_y, cartesian_x, utm_zone_,
                                  utm_meridian_convergence_);
-      utm_meridian_convergence_ *= NavsatConversions::RADIANS_PER_DEGREE;
+      utm_meridian_convergence_ = 0.0; // disable meridian convergence to output odometry in UTM
+      // TODO(alevs2r): keep meridian convergence but apply world->utm transform instead
+      // utm_meridian_convergence_ *= NavsatConversions::RADIANS_PER_DEGREE;
     }
 
     ROS_INFO_STREAM("Datum (latitude, longitude, altitude) is (" << std::fixed << msg->latitude << ", " <<
